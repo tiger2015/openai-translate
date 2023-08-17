@@ -44,14 +44,18 @@ public class TranslateApp {
     }
 
 
+    // 程序入口
     public static void main(String[] args) throws IOException {
         String input = "F:\\ym\\80211-2012\\802.11-2012.pdf";
-        String output = "F:\\ym\\80211-2012\\802.11-2012.text";
-        String docPath="C:\\Users\\ZengHu\\Desktop\\temp.docx";
+        // 输出结果文件
+        String output = "C:\\Users\\yuanmeng\\Desktop\\now\\wifi\\translate\\802.11-2012-1400-1499.text";
+        // 输入源文件，doc
+        String docPath="C:\\Users\\yuanmeng\\Desktop\\now\\wifi\\translate\\802.11-2012-1400-1499.docx";
         int startPage = 271;
         int endPage = 272;
         //extractTextFromPdf(input, output, startPage, endPage);
-        WordUtils.readWord(docPath);
+        // 将word转换为文本，以段落为单元
+        WordUtils.readWord2019(docPath, output);
     }
 
 
