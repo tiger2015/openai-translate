@@ -18,7 +18,11 @@ import java.util.List;
  **/
 public class WordUtils {
 
-    public static void readWord2016(String inputFile, String outputFile) {
+    public static final String WORD2016 = "word2016";
+    public static final String WORD2019 = "word2019";
+
+
+    public static void readWordToText(String inputFile, String outputFile, int[] titleNumbers) {
         try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
              BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, false));
              XWPFDocument document = new XWPFDocument(inputStream)) {
@@ -29,38 +33,9 @@ public class WordUtils {
                  * office 2016
                  * styleID:
                  * 4:标题，数字大小代表标题级别
-                 * a5:正文
+                 * a3、a5:正文
+                 * a4: 列表
                  * a7:列表
-                 *
-                 */
-                final String styleID = paragraph.getStyleID();
-                if (styleID == null) continue;
-                final String paragraphText = paragraph.getParagraphText();
-                if (paragraphText ==null || paragraphText.length() == 0) continue;
-                System.out.println(styleID+":"+paragraphText);
-                if (styleID.matches("\\d")){
-                    writer.write(paragraphText+"\n");
-                }else if ("a5".equalsIgnoreCase(styleID)){
-                    writer.write(paragraphText+"\n");
-                }else if ("a7".equalsIgnoreCase(styleID)){
-                    writer.write(paragraphText+"\n");
-                }
-                writer.flush();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void readWord2019(String inputFile, String outputFile) {
-        try (BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(inputFile));
-             BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, false));
-             XWPFDocument document = new XWPFDocument(inputStream)) {
-            Iterator<XWPFParagraph> paragraphs = document.getParagraphsIterator();
-            while (paragraphs.hasNext()) {
-                XWPFParagraph paragraph = paragraphs.next();
-                /**
-                 *
                  * office 2019
                  * BodyText: 正文
                  * Heading2: 二级标题
@@ -69,36 +44,29 @@ public class WordUtils {
                 final String styleID = paragraph.getStyleID();
                 if (styleID == null) continue;
                 final String paragraphText = paragraph.getParagraphText();
-                if (paragraphText ==null || paragraphText.length() == 0) continue;
-               // System.out.println(styleID+":"+paragraphText);
-                if ("BodyText".equalsIgnoreCase(styleID)){
-                    if (paragraphText.trim().startsWith("(") || paragraphText.trim().startsWith("（")){
-                        continue;
+                if (paragraphText == null || paragraphText.length() == 0) continue;
+                // System.out.println(styleID + ":" + paragraphText);
+                // 标题
+                if (styleID.matches("\\d") || styleID.matches("Heading\\d+")) {
+                    BigInteger numIlvl = paragraph.getNumIlvl();
+                    if (numIlvl == null) {
+                        writer.write(paragraphText + "\n");
+                    } else {
+                        String numLevelText = paragraph.getNumLevelText();
+                        int index = numIlvl.intValue();
+                        for (int i = index + 1; i < titleNumbers.length; i++) {
+                            titleNumbers[i] = 0;
+                        }
+                        titleNumbers[index]++;
+                        // 需要将之前的置为0
+                        for (int i = 0; i < index + 1; i++) {
+                            numLevelText = numLevelText.replace("%" + (i + 1), titleNumbers[i] + "");
+                        }
+                        System.out.println("title:" + index + "," + numLevelText + "," + titleNumbers[index] + "," + paragraphText);
+                        writer.write(numLevelText + " " + paragraphText + "\n");
                     }
-                    writer.write(paragraphText+"\n");
-                    //String style = paragraph.getStyle();
-                  //  System.out.println(style+":"+paragraphText);
-                }else if (styleID.startsWith("Heading")){
-                  //  String numLevelText = paragraph.getNumLevelText();
-                   // String numFmt = paragraph.getNumFmt();
-                  //  BigInteger numID = paragraph.getNumID();
-                   // String text = paragraph.getText();
-                   // BodyType partType = paragraph.getPartType();
-                   // String style = paragraph.getStyle();
-                    CTP ctp = paragraph.getCTP();
-                    List<CTBookmark> bookmarkStartList = ctp.getBookmarkStartList();
-                    if (bookmarkStartList.size() > 1){
-                        String name = bookmarkStartList.get(0).getName();
-                       // System.out.println(name);
-                        writer.write(name+"\n");
-                    }
-
-                   // IBody body = paragraph.getBody();
-                  //  BigInteger numIlvl = paragraph.getNumIlvl();
-                   //System.out.println(numLevelText);
-                  //  writer.write(paragraph.getText()+"\n");
-                }else if ("ListParagraph".equalsIgnoreCase(styleID)){
-                    writer.write(paragraph.getText()+"\n");
+                } else if (styleID.matches("a\\d+") || styleID.equals("BodyText") || styleID.equals("ListParagraph")) { //段落
+                    writer.write(paragraphText + "\n");
                 }
                 writer.flush();
             }

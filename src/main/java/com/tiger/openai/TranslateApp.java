@@ -48,14 +48,15 @@ public class TranslateApp {
     public static void main(String[] args) throws IOException {
         String input = "F:\\ym\\80211-2012\\802.11-2012.pdf";
         // 输出结果文件
-        String output = "C:\\Users\\yuanmeng\\Desktop\\now\\wifi\\translate\\802.11-2012-1400-1499.text";
+        String output = "F:\\翻译\\802.11-2012-1400-1499.text";
         // 输入源文件，doc
-        String docPath="C:\\Users\\yuanmeng\\Desktop\\now\\wifi\\translate\\802.11-2012-1400-1499.docx";
+        String docPath = "F:\\翻译\\802.11-2012-1400-1499.docx";
         int startPage = 271;
         int endPage = 272;
         //extractTextFromPdf(input, output, startPage, endPage);
         // 将word转换为文本，以段落为单元
-        WordUtils.readWord2019(docPath, output);
+        int[] titleNumbers = {11, 8, 2, 6, 0};
+        WordUtils.readWordToText(docPath, output, titleNumbers);
     }
 
 
