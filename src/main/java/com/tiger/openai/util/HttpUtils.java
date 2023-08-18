@@ -9,13 +9,20 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 
+import javax.net.ssl.SSLContext;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,27 +39,42 @@ public class HttpUtils {
 
     static {
         clientBuilder = HttpClientBuilder.create();
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(8);
-        connectionManager.setDefaultMaxPerRoute(4);
-        clientBuilder.setConnectionManager(connectionManager);
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(60000)
-                .setConnectionRequestTimeout(60000)
+                .setSocketTimeout(30000)
+                .setConnectTimeout(30000)
+                .setConnectionRequestTimeout(30000)
                 .build();
         clientBuilder.setDefaultRequestConfig(requestConfig);
+        try {
+            SSLContext sslContext = SSLContext.getDefault();
+            Registry<ConnectionSocketFactory> registry = RegistryBuilder.<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.INSTANCE)
+                    .register("https", new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1.2"}, null,
+                            SSLConnectionSocketFactory.getDefaultHostnameVerifier()))
+                    .build();
+            PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(registry);
+            connectionManager.setMaxTotal(32);
+            connectionManager.setDefaultMaxPerRoute(32);
+            clientBuilder.setConnectionManagerShared(true);
+            clientBuilder.setConnectionManager(connectionManager);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
     /**
      * 发送post请求
+     *
      * @param url
      * @param headers 请求头
-     * @param params 请求参数
+     * @param params  请求参数
      * @return
      * @throws Exception
      */
-    public static HttpJsonResponse sendPostRequest(String url, Map<String, String> headers, Map<String, Object> params) throws Exception {
+    public static HttpJsonResponse sendPostRequest(String url, Map<String, String> headers,
+                                                   Map<String, Object> params) throws Exception {
         HttpPost httpPost = new HttpPost(url);
         // 添加请求头
         if (!ObjectUtils.isEmpty(headers)) {

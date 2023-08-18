@@ -1,5 +1,7 @@
 package com.tiger.openai;
 
+import com.tiger.openai.model.HttpJsonResponse;
+import com.tiger.openai.util.OpenAiUtil;
 import com.tiger.openai.util.PdfHelper;
 import com.tiger.openai.util.TextUtils;
 import com.tiger.openai.util.WordUtils;
@@ -10,6 +12,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author Zenghu
@@ -55,8 +58,21 @@ public class TranslateApp {
         int endPage = 272;
         //extractTextFromPdf(input, output, startPage, endPage);
         // 将word转换为文本，以段落为单元
-        int[] titleNumbers = {11, 8, 2, 6, 0};
-        WordUtils.readWordToText(docPath, output, titleNumbers);
+        // int[] titleNumbers = {11, 8, 2, 6, 0};
+        // WordUtils.readWordToText(docPath, output, titleNumbers);
+        log.info("start");
+        while (true) {
+            try {
+                TimeUnit.SECONDS.sleep(30);
+                String result = OpenAiUtil.translateWithApi("hello world");
+                log.info("result:{}", result);
+                if (result.length() > 0) {
+                    break;
+                }
+            } catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        }
     }
 
 

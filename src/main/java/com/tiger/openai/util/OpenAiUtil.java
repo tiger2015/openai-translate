@@ -1,5 +1,9 @@
 package com.tiger.openai.util;
 
+import com.azure.ai.openai.OpenAIClient;
+import com.azure.ai.openai.OpenAIClientBuilder;
+import com.azure.core.credential.AzureKeyCredential;
+import com.theokanning.openai.completion.CompletionChoice;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.service.OpenAiService;
 import com.tiger.openai.model.HttpJsonResponse;
@@ -7,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,8 +24,8 @@ import java.util.Map;
 public class OpenAiUtil {
 
     public static String url = "https://api.openai.com/v1/chat/completions";
-    public static String apiKey = "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";
-    public static String prompt = "Please behave like GPT-4 model, translate the following text into Chinese.";
+    public static String apiKey = "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";
+    public static String prompt = "translate the following text into Chinese.";
 
     public static Map<String, String> headers;
 
@@ -31,31 +36,36 @@ public class OpenAiUtil {
 
     }
 
-    public static HttpJsonResponse translate(String content) {
+    public static HttpJsonResponse translate(String content) throws Exception {
         Map<String, Object> data = new HashMap<>();
-        data.put("model", "gpt-3.5-turbo");
+        data.put("model", "text-davinci-001");
         data.put("temperature", 0.7);
-        data.put("max_tokens", 200);
+        data.put("max_tokens", 40000);
 
         Map<String, Object> messages = new HashMap<>();
         messages.put("role", "user");
-        messages.put("content", prompt + ":\n" + content);
+        messages.put("content", prompt + "\n" + content);
         data.put("messages", messages);
         try {
             return HttpUtils.sendPostRequest(url, headers, data);
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            throw e;
         }
-        return null;
     }
 
-    public static void translateWithApi(String content) {
-        OpenAiService service = new OpenAiService(apiKey, Duration.ofSeconds(600));
+    public static String translateWithApi(String content) {
+        OpenAiService service = new OpenAiService(apiKey, Duration.ofSeconds(60));
         CompletionRequest completionRequest = CompletionRequest.builder()
-                .prompt(prompt + ":\n" + content)
-                .model("gpt-3.5-turbo")
-                .echo(true)
+                .prompt(prompt + "\n" + content)
+                .model("ada")
+                .temperature(0.5)
+                .maxTokens(2000)
                 .build();
-        service.createCompletion(completionRequest).getChoices().forEach(System.out::println);
+        List<CompletionChoice> choices = service.createCompletion(completionRequest).getChoices();
+        StringBuilder builder = new StringBuilder();
+        for (CompletionChoice choice : choices) {
+            builder.append(choice.getText());
+        }
+        return builder.toString();
     }
 }
