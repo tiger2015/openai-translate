@@ -1,8 +1,5 @@
 package com.tiger.openai.util;
 
-import com.azure.ai.openai.OpenAIClient;
-import com.azure.ai.openai.OpenAIClientBuilder;
-import com.azure.core.credential.AzureKeyCredential;
 import com.theokanning.openai.completion.CompletionChoice;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.service.OpenAiService;
@@ -24,7 +21,7 @@ import java.util.Map;
 public class OpenAiUtil {
 
     public static String url = "https://api.openai.com/v1/chat/completions";
-    public static String apiKey = "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";
+    public static String apiKey = "";
     public static String prompt = "translate the following text into Chinese.";
 
     public static Map<String, String> headers;
